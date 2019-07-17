@@ -10,8 +10,8 @@ Here are the Scripts that were added:
 - Board Controller
 - Board
 - Cell
-- Box Render
 - Flag
+- Box Render
 
 
 ### Board Controller
@@ -44,7 +44,7 @@ public class BoardController : MonoBehaviour
     public static int boardSet; //Confirm board is set before Cell Update calls
 
   
-    //**** MONOBEHAVIOR FUNCTION *****
+    //MONOBEHAVIOR FUNCTIONS
 
     void Awake()
     {
@@ -624,11 +624,197 @@ public class Cell : MonoBehaviour
 
 ### Flag
 
-The `Flag`controls the graphic flag (spheres) that the player and mesh board interacts with. It is triggered when the player lands on top of it; the cell then notifies the `BoardController` which returns information to the cell about what color to render to (if any).
+The `Flag`controls the mesh flag spheres that the player and mesh board interacts with. When triggered by the player, it checks for a mouse click to see if the player wants to delete it. 
+
+```markdown
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Flag : MonoBehaviour
+{
+    //GAME OBJECTS
+    public GameObject cube;
+    public GameObject boardObj;
+    GameObject player;
+    GameObject staff;
+
+    //SCRIPTS
+    private Board board;
+    private Cell cell;
+
+    //BOOLS
+    bool m_inTrigger;
+    bool m_foundStaff;
+
+
+    //***********  METHODS ****************
+
+
+    private void Awake()
+    {
+        player = GameObject.Find("Ellen");
+        cell = cube.GetComponent<Cell>();
+        board = boardObj.GetComponent<Board>();
+	}
+
+
+    //Destroys flag when game is over 
+	public void EndGame()
+	{
+		Destroy(gameObject);           
+	}
+
+
+    //checks if character is on flag
+    private void OnTriggerEnter(Collider other)
+    {
+
+        if (other.gameObject == player || other.gameObject == staff)
+        {
+            m_inTrigger = true;
+        }
+    }
+    //checks if character leaves flag
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject == player || other.gameObject == staff)
+        {
+            m_inTrigger = false;
+        }
+    }
+
+    void Update()
+    {
+        if (Input.GetMouseButtonDown(0))        //to delete when clicked
+        {
+            if (m_inTrigger == true)
+            {
+				Destroy(gameObject);
+				cell.RemoveFlag((int)(this.transform.position.x / 2), (int)(this.transform.position.z / 2)); 
+                board.RemoveFlag((int)(this.transform.position.x/2), (int)(this.transform.position.z/2));       
+            }
+        }
+                       
+        if (!m_foundStaff && Input.GetMouseButtonDown(0))       //staff is only enabled when clicked, old verison of unity couldn't find 
+        {                                                       //the assets so I just went with a tag when its available 
+            staff = GameObject.FindGameObjectWithTag("Staff");
+            if (staff)
+                m_foundStaff = true;
+        }
+    }
+
+
+}
+
+```
+
+### Box Render
+
+The `BoxRender`controls the render settings of the mesh cell. It directly communicates with `Cell` to deterimne what color to render to.
 
 ```markdown
 
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
+public class BoxRender : MonoBehaviour
+{
+    Renderer rend;
+
+    //gameobject position
+    void Awake()
+    {
+        rend = this.GetComponent<Renderer>();
+
+        rend.material.shader = Shader.Find("_Color");
+        rend.material.SetColor("_Color", Color.grey);
+
+        rend.material.shader = Shader.Find("Specular");
+        rend.material.SetColor("_SpecColor", Color.grey);
+    }
+
+    //  This function changes the cube color
+    public void SetColor(int num)
+    {
+        switch (num)
+        {
+            case 0:
+                rend.material.shader = Shader.Find("_Color");               // 0 is white
+                rend.material.SetColor("_Color", Color.white);
+                rend.material.shader = Shader.Find("Specular");
+                rend.material.SetColor("_SpecColor", Color.white);
+                break;
+            case 1:
+                rend.material.shader = Shader.Find("_Color");               // 1 is blue
+                rend.material.SetColor("_Color", Color.blue);
+                rend.material.shader = Shader.Find("Specular");
+                rend.material.SetColor("_SpecColor", Color.blue);
+                break;
+            case 2:                                                         // 2 is green
+                rend.material.shader = Shader.Find("_Color");
+                rend.material.SetColor("_Color", Color.green);
+                rend.material.shader = Shader.Find("Specular");
+                rend.material.SetColor("_SpecColor", Color.green);
+                break;
+            case 3:
+                rend.material.shader = Shader.Find("_Color");               // 3 is red
+                rend.material.SetColor("_Color", Color.red);
+                rend.material.shader = Shader.Find("Specular");
+                rend.material.SetColor("_SpecColor", Color.red);
+                break;
+            case 4:
+                rend.material.shader = Shader.Find("_Color");               // 4 is purple
+                rend.material.SetColor("_Color", Color.HSVToRGB(267, 74f, 59f)); 
+                rend.material.shader = Shader.Find("Specular");
+                rend.material.SetColor("_SpecColor", Color.HSVToRGB(267, 74f, 59f));
+                break;
+            case 5:
+                rend.material.shader = Shader.Find("_Color");               // 5 is maroon
+                rend.material.SetColor("_Color", Color.HSVToRGB(338f, 100f, 27f)); 
+                rend.material.shader = Shader.Find("Specular");
+                rend.material.SetColor("_SpecColor", Color.HSVToRGB(338f, 100f, 27f));
+                break;
+            case 6:
+                rend.material.shader = Shader.Find("_Color");               // 6 is turquoise 
+                rend.material.SetColor("_Color", Color.cyan);
+                rend.material.shader = Shader.Find("Specular");
+                rend.material.SetColor("_SpecColor", Color.cyan);
+                break;
+            case 7:
+                rend.material.shader = Shader.Find("_Color");               // 7 is black 
+                rend.material.SetColor("_Color", Color.black);
+                rend.material.shader = Shader.Find("Specular");
+                rend.material.SetColor("_SpecColor", Color.black);
+                break;
+            case 8:                                                         // 8 is grey
+                rend.material.shader = Shader.Find("_Color");
+                rend.material.SetColor("_Color", Color.grey);
+                rend.material.shader = Shader.Find("Specular");
+                rend.material.SetColor("_SpecColor", Color.grey);
+                break;
+            case 9: //end game                                              //mines are dark read but look black 
+                rend.material.shader = Shader.Find("_Color");
+                rend.material.SetColor("_Color", Color.HSVToRGB(10f, 100f, 54f));   
+                rend.material.shader = Shader.Find("Specular");
+                rend.material.SetColor("_SpecColor", Color.HSVToRGB(10f, 100f, 54f));
+                break;
+            case 10:
+                //do nothing
+                break;
+            case 11: //start game                                           // start block is yellow
+                rend.material.shader = Shader.Find("_Color");
+                rend.material.SetColor("_Color", Color.yellow); 
+                rend.material.shader = Shader.Find("Specular");
+                rend.material.SetColor("_SpecColor", Color.yellow);
+                break;
+
+        }
+    }
+}
+
+```
 - Bulleted
 - List
 
@@ -639,13 +825,3 @@ The `Flag`controls the graphic flag (spheres) that the player and mesh board int
 
 [Link](url) and ![Image](src)
 
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/ganzabeans/Minesweeper-3D/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
