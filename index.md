@@ -16,28 +16,23 @@ BoardController
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
 ```markdown
-Syntax highlighted code block
 
-# Header 1
-## Header 2
-### Header 3
-
-***using System.Collections;
-#using System.Collections.Generic;
-#using Gamekit3D;
-#using UnityEngine;***
+using System.Collections;
+using System.Collections.Generic;
+using Gamekit3D;
+using UnityEngine;***
 
 public class BoardController : MonoBehaviour
 {
 
     //GAME OBJECTS
-    public GameObject `boardObject;`
-    public GameObject `cellObject;`
-    private GameObject `player;`
-    public GameObject `flagPrefab;`
+    public GameObject boardObject;
+    public GameObject cellObject;
+    private GameObject player;
+    public GameObject flagPrefab;
     
     //SCRIPTS
-    private Cell `cellScript;`
+    private Cell cellScript;
     private Board board;
     private Flag flag;
     Vector3 flagPositionVector;
@@ -47,6 +42,33 @@ public class BoardController : MonoBehaviour
 
     //BOOLS
     bool m_flag;
+    
+    //********** MONOBEHAVIOR FUNCTIONS ************
+
+    void Awake()
+    {
+        //boardObject = GameObject.FindGameObjectWithTag("ThisIsBoard");
+        //Debug.Log("Board object is " + boardObject);
+        board = boardObject.GetComponent<Board>();
+        //Debug.Log("Board script is " + board);
+        player = GameObject.Find("Ellen");
+        //Debug.Log(player);
+        flag = flagPrefab.GetComponent<Flag>();
+    }
+
+    // ***** THIS METHOD ACTIVATES THE BOARD *****
+    // First step will not be a mine 
+    public void Click(int x, int z)
+    {
+        cellScript = cellObject.GetComponent<Cell>();
+        board = boardObject.GetComponent<Board>();
+        flag = flagPrefab.GetComponent<Flag>();
+       // Debug.Log("Board script is " + board);
+
+        boardSet += board.CreateMineFields(x, z);
+        boardSet += board.AssignNum();
+    }
+
 
 - Bulleted
 - List
