@@ -11,9 +11,9 @@ Here are the Scripts that were added:
 - Flag
 
 
-### BoardController
+### Board Controller
 
-The Board Controller is the Control between the graphical interface and the actual calculations of the game. It manages the Board (game calculations), the Cells (graphic cells that player interacts with), the Flags (graphic dots), as well as the Player itself.
+The `BoardController` is the Control between the graphical interface and the actual calculations of the game. It manages the `Board` (game calculations), the `Cell`s (graphic cells that player interacts with), the `Flag`s (graphic dots), as well as the Player itself.
 
 ```markdown
 
