@@ -13,7 +13,7 @@ Here are the Scripts that were added:
 
 BoardController
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+The Board Controller is the Control between the graphical interface and the actual calculations of the game. It manages the Board (game calculations), the Cells (graphic cells that player interacts with), the Flags (graphic dots), as well as the Player itself.
 
 ```markdown
 
