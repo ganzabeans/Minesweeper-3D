@@ -825,5 +825,5 @@ _All this code is written by Anisha Braganza but is free to be used by anyone :)
 
 **Bold** and _Italic_ and `Code` text
 
-[Link](url) and ![Image](Screen Shot 2019-07-17 at 1.06.21 PM.png)
+[Link](url) and ![Screen Shot 2019-07-17 at 1.06.21 PM.png](src)
 
