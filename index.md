@@ -819,4 +819,4 @@ public class BoxRender : MonoBehaviour
 
 ```
 
-_All this code is written by Anisha Braganza but is free to be used by anyone :)_
+_These scripts are written by Anisha Braganza but are free to be used by anyone :)_
