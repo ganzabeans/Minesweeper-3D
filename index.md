@@ -825,5 +825,5 @@ _All this code is written by Anisha Braganza but is free to be used by anyone :)
 
 **Bold** and _Italic_ and `Code` text
 
-[Link](url) and ![Screen Shot 2019-07-17 at 1.06.21 PM.png](src)
+[Link](url) and ![https://raw.githubusercontent.com/ganzabeans/Minesweeper-3D/master/Screen%20Shot%202019-07-17%20at%201.06.21%20PM.png](src)
 
