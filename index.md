@@ -1,5 +1,6 @@
-## This project was created with Assets from Unity 3D Game Kit Lite. 
+### This project was created with Assets from Unity 3D Game Kit Lite. 
 
+## This project was created with Assets from Unity 3D Game Kit Lite. 
 These are the added scripts for a 3D version of Minesweeper.
 
 ### Markdown
