@@ -4,11 +4,11 @@ This project was created with Assets from Unity 3D Game Kit Lite. I created addi
 
 Here are the Scripts that were added:
 
-Board Controller
-Board
-Cell
-Box Render
-Flag
+- Board Controller
+- Board
+- Cell
+- Box Render
+- Flag
 
 
 BoardController
@@ -22,10 +22,10 @@ Syntax highlighted code block
 ## Header 2
 ### Header 3
 
-using System.Collections;
-using System.Collections.Generic;
-using Gamekit3D;
-using UnityEngine;
+#using System.Collections;
+#using System.Collections.Generic;
+#using Gamekit3D;
+#using UnityEngine;
 
 public class BoardController : MonoBehaviour
 {
