@@ -816,7 +816,7 @@ public class BoxRender : MonoBehaviour
 
 ```
 
-_All this_ _code was written by Anisha Braganza but is free to be used by for anyone :)_
+_All this code is written by Anisha Braganza but is free to be used by anyone :)_
 - Bulleted
 - List
 
