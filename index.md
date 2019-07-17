@@ -22,22 +22,22 @@ Syntax highlighted code block
 ## Header 2
 ### Header 3
 
-#using System.Collections;
+***using System.Collections;
 #using System.Collections.Generic;
 #using Gamekit3D;
-#using UnityEngine;
+#using UnityEngine;***
 
 public class BoardController : MonoBehaviour
 {
 
     //GAME OBJECTS
-    public GameObject boardObject;
-    public GameObject cellObject;
-    private GameObject player;
-    public GameObject flagPrefab;
+    public GameObject `boardObject;`
+    public GameObject `cellObject;`
+    private GameObject `player;`
+    public GameObject `flagPrefab;`
     
     //SCRIPTS
-    private Cell cellScript;
+    private Cell `cellScript;`
     private Board board;
     private Flag flag;
     Vector3 flagPositionVector;
