@@ -20,7 +20,7 @@ The Board Controller is the Control between the graphical interface and the actu
 using System.Collections;
 using System.Collections.Generic;
 using Gamekit3D;
-using UnityEngine;***
+using UnityEngine;
 
 public class BoardController : MonoBehaviour
 {
@@ -47,27 +47,22 @@ public class BoardController : MonoBehaviour
 
     void Awake()
     {
-        //boardObject = GameObject.FindGameObjectWithTag("ThisIsBoard");
-        //Debug.Log("Board object is " + boardObject);
         board = boardObject.GetComponent<Board>();
-        //Debug.Log("Board script is " + board);
         player = GameObject.Find("Ellen");
-        //Debug.Log(player);
         flag = flagPrefab.GetComponent<Flag>();
     }
 
     // ***** THIS METHOD ACTIVATES THE BOARD *****
     // First step will not be a mine 
-    public void Click(int x, int z)
+    `public void Click(int x, int z)
     {
         cellScript = cellObject.GetComponent<Cell>();
         board = boardObject.GetComponent<Board>();
         flag = flagPrefab.GetComponent<Flag>();
-       // Debug.Log("Board script is " + board);
 
         boardSet += board.CreateMineFields(x, z);
         boardSet += board.AssignNum();
-    }
+    }`
 
 
 - Bulleted
