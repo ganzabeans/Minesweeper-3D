@@ -2,6 +2,8 @@
 
 This project was created with Assets from Unity 3D Game Kit Lite. I created additional scripts and meshes to make the game functional.
 
+![Image](https://raw.githubusercontent.com/ganzabeans/Minesweeper-3D/master/Screen%20Shot%202019-07-17%20at%201.06.21%20PM.png)
+
 Rather than a clickable 2D surface such as in the original Minesweeper, this 3D version allows the user to run and jump across an active mine field via a human character. Just like in a real mine field, when the player lands on a cell, the cell is triggered. The player can also flag mine fields to deactivate them. The game is won when all cells without mines have been triggered and conversely is lost when a mine has been triggered.
 
 
@@ -825,5 +827,5 @@ _All this code is written by Anisha Braganza but is free to be used by anyone :)
 
 **Bold** and _Italic_ and `Code` text
 
-[Link](url) and ![Image](https://raw.githubusercontent.com/ganzabeans/Minesweeper-3D/master/Screen%20Shot%202019-07-17%20at%201.06.21%20PM.png)
+[Link](url) and 
 
