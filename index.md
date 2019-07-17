@@ -1,9 +1,17 @@
-### This project was created with Assets from Unity 3D Game Kit Lite. 
+## About this Project
 
-## This project was created with Assets from Unity 3D Game Kit Lite. 
-These are the added scripts for a 3D version of Minesweeper.
+This project was created with Assets from Unity 3D Game Kit Lite. I created additional scripts and the game board to run the game.
 
-### Markdown
+Here are the Scripts that were added:
+
+Board Controller
+Board
+Cell
+Box Render
+Flag
+
+
+BoardController
 
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
@@ -13,6 +21,32 @@ Syntax highlighted code block
 # Header 1
 ## Header 2
 ### Header 3
+
+using System.Collections;
+using System.Collections.Generic;
+using Gamekit3D;
+using UnityEngine;
+
+public class BoardController : MonoBehaviour
+{
+
+    //GAME OBJECTS
+    public GameObject boardObject;
+    public GameObject cellObject;
+    private GameObject player;
+    public GameObject flagPrefab;
+    
+    //SCRIPTS
+    private Cell cellScript;
+    private Board board;
+    private Flag flag;
+    Vector3 flagPositionVector;
+
+    //PUBLIC STATIC VARS
+    public static int boardSet;
+
+    //BOOLS
+    bool m_flag;
 
 - Bulleted
 - List
