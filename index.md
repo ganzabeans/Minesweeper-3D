@@ -19,10 +19,9 @@ Here are the Scripts that were added:
 
 ### Board Controller
 
-The `BoardController` is the Control between the graphical interface and the actual calculations of the game. It manages the `Board` (game calculations), the `Cell`s (graphic cells that player interacts with), the `Flag`s (graphic dots), as well as the Player itself.
+The `BoardController` is the Control between the visuals and the board calculations of the game. It manages the `Board` (the non-visual map of the game), the `Cell`s (bisual cells that player interacts with), the `Flag`s (graphic dots), as well as the Player itself. After creating this, however, I'm not sure if this is the most efficient practice for Unity architecture...
 
 ```markdown
-
 using System.Collections;
 using System.Collections.Generic;
 using Gamekit3D;
@@ -47,7 +46,7 @@ public class BoardController : MonoBehaviour
     public static int boardSet; //Confirm board is set before Cell Update calls
 
   
-    //MONOBEHAVIOR FUNCTIONS
+    //**** MONOBEHAVIOR FUNCTION *****
 
     void Awake()
     {
@@ -86,7 +85,7 @@ public class BoardController : MonoBehaviour
            Cell.endgame = true;
            flag.EndGame();
         }
-        if (x == 11)                        // x == 11 calls a win to the game
+        if (x == 10)                        // x == 10 calls a win to the game
         {
             Cell.wingame = true;
             flag.EndGame();
@@ -147,6 +146,7 @@ public class BoardController : MonoBehaviour
     }
 }
 
+
 ```
 
 ### Board
@@ -154,6 +154,7 @@ public class BoardController : MonoBehaviour
 The `Board` runs the calculations and holds a non-graphical map of the game. It uses an array of structs to hold information about each cell. The `BoardController` notifies the board on where the player is in the graphical world. 
 
 ```markdown
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -191,7 +192,7 @@ public class Board : MonoBehaviour
 
     //********* METHODS ***********
 
-    private void Awkae()
+    private void Awake()
     {
         boardController = boardControllerObject.GetComponent<BoardController>(); //reference board controller
     }
@@ -224,6 +225,7 @@ public class Board : MonoBehaviour
         clickCounter++;
 
         return 1;
+
     }
 
     //***** ASSIGN MINE COUNT NUM TO NEIGHBORS ********
@@ -262,7 +264,7 @@ public class Board : MonoBehaviour
             if (b < bounds)
                 board[a, b + 1].nextToMine++;
         }
-                           
+
         return 1;
     }
 
@@ -271,14 +273,14 @@ public class Board : MonoBehaviour
     public int CheckNum(int a, int b)
     {
         if (board[a, b].isClicked)                  //check if square hasn't been stepped on already
-            return 10;
+            return 11;
         else                                        //if the square is not run over
         {
             board[a, b].isClicked = true;           //set clicked to true
             clickCounter++;
 
             if (clickCounter == 71 && !Cell.endgame)//win game
-                return 11;
+                return 10;
 
             if (board[a, b].hasMine == true)        //check if there is a mine
                 return 9;                           //sad :'(
@@ -295,7 +297,7 @@ public class Board : MonoBehaviour
     //***** CHECK IF NEIGHBOR SQUARES ARE NOT MINES ********
     // compares surrounding array to make sure other squares are still in bounds
     // this method is called by a null square to open up surrounding squres that are
-    //touching it
+    //touching it (search method)
     public int NullAround(int a, int b)
     {
         aMin = a - 1;
@@ -304,7 +306,7 @@ public class Board : MonoBehaviour
         bPlus = b + 1;
 
         if (board[a, b].hasMine)        //if starting square has a mine, don't open it!
-            return 10;
+            return 11;
 
         if (a < bounds)
         {
@@ -371,7 +373,7 @@ public class Board : MonoBehaviour
             }
         }
 
-        return 10;
+        return 11;
     }
 
 
@@ -380,7 +382,8 @@ public class Board : MonoBehaviour
     //Set Flag Method
     public Vector3 SetFlag(int a, int b, Vector3 vector3)
     {
-        int x, z;
+        int x, z;       //direction of look vector
+        int p, q;       //new cell to look at
         aMin = a - 1;
         aPlus = a + 1;
         bMin = b - 1;
@@ -389,83 +392,23 @@ public class Board : MonoBehaviour
         x = Mathf.RoundToInt(vector3.x);
         z = Mathf.RoundToInt(vector3.z);
 
-        //assign flags based on vector
+        p = x + a;
+        q = z + b;
 
-        //following if statements check the bounds to see if still in array 
-        if (x == 1 && a < bounds)
+        if (p > 0 && p < bounds && q > 0 && q < bounds)
         {
-            if (z == 0)
-            {
-                board[aPlus, b].isFlagged = !board[aPlus, b].isFlagged;
-                if (board[aPlus, b].isFlagged)
-                    return (new Vector3(aPlus * 2 +1, 2, b * 2 - 1));
-                else
-                    return Vector3.zero;
-            }
-            if (z == 1 && b < bounds)
-            {
-                board[aPlus, bPlus].isFlagged = !board[aPlus, bPlus].isFlagged;
-                if(board[aPlus,bPlus].isFlagged)
-                    return (new Vector3(aPlus * 2 + 1, 2, bPlus * 2 - 1));
-                else
-                    return Vector3.zero;
-            }
-            if (z == -1 && b > 0)
-            {
-                board[aPlus, bMin].isFlagged = !board[aPlus, bMin].isFlagged;
-                if (board[aPlus, bMin].isFlagged)
-                    return (new Vector3(aPlus * 2 + 1, 2, bMin * 2 - 1));
-                else
-                    return Vector3.zero;
-            }
-        }
-        else if (x == -1 && a > 0)
-        {
-            if (z == 0)
-            {
-                board[aMin, b].isFlagged = !board[aMin, b].isFlagged;
-                if (board[aMin, b].isFlagged)
-                    return (new Vector3(aMin * 2 + 1, 2, b * 2 - 1));
-                else
-                    return Vector3.zero;
-            }
-            if (z == 1 && b < bounds)
-            {
-                board[aMin, bPlus].isFlagged = !board[aMin, bPlus].isFlagged;
-                if (board[aMin, bPlus].isFlagged)
-                    return (new Vector3(aMin * 2 + 1, 2, bMin * 2 - 1));
-                else
-                    return Vector3.zero;
-            }
-            if (z == -1 && b > 0)
-            {
-                board[aMin, bMin].isFlagged = !board[aMin, bMin].isFlagged;
-                if (board[aMin, bMin].isFlagged)
-                    return (new Vector3(aMin * 2 + 1, 2, bMin * 2 - 1));
-                else
-                    return Vector3.zero;
-            }
-        }
-        else if (x == 0 && z == -1 && b > 0)
-        {
-            board[a, bMin].isFlagged = !board[a, bMin].isFlagged;
-            if (board[a, bMin].isFlagged)
-                return (new Vector3(a * 2 + 1, 2, bMin * 2 - 1));
+            board[p, q].isFlagged = !board[p, q].isFlagged;
+            if (board[p, q].isFlagged)
+                return (new Vector3(p * 2 + 1, 2, q * 2 - 1));
             else
                 return Vector3.zero;
         }
-        else if (x == 0 && z == 1 && b < bounds)
-        {
-            board[a, bPlus].isFlagged = !board[a, bPlus].isFlagged;
-            if (board[a, bPlus].isFlagged)
-                return (new Vector3(a * 2 + 1, 2, bPlus * 2 - 1));
-            else
-                return Vector3.zero;
-        }
+
         return Vector3.zero;
+
     }
 
-                
+ 
     //Check if flagged
     public bool SeeIfFlagged(int a, int b)
     {
@@ -477,8 +420,10 @@ public class Board : MonoBehaviour
     {
         board[a, b+1].isFlagged = false;
         boardController.CheckFlagToCell();  //asks cell to see if its flag is deleted 
-    }  
+    }
+   
 }
+
 
 ```
 
@@ -520,11 +465,11 @@ public class Cell : MonoBehaviour
     int a, b; //coordinate location
 
 
-    //******** METHODS ***************
+    //******** METHODS *******************
 
     // MONOBEHAVIOR METHODS 
 
-    //***** START *******
+    //***** START **********
     //Find elen object to detect in trigger, set array 
 
     void Start ()                       
@@ -546,7 +491,7 @@ public class Cell : MonoBehaviour
         if (!endgame && !wingame && !flagged && boardController.IsBoardSet() && !steppedOn && firstClick)
         {
             colorNum = boardController.CheckAround(a, b);
-            if (colorNum != 10)
+            if (colorNum != 11)
             {
                 steppedOn = true;
                 colorBox.SetColor(colorNum);
@@ -589,7 +534,7 @@ public class Cell : MonoBehaviour
                     firstClick = true;
                     steppedOn = true;
                     boardController.Click(a, b);
-                    colorBox.SetColor(11);
+                    colorBox.SetColor(10);
                 }
         }
     }
@@ -621,7 +566,9 @@ public class Cell : MonoBehaviour
         }
     }
 
+
 }   
+
 
 ```
 
@@ -741,82 +688,30 @@ public class BoxRender : MonoBehaviour
     //  This function changes the cube color
     public void SetColor(int num)
     {
-        switch (num)
-        {
-            case 0:
-                rend.material.shader = Shader.Find("_Color");               // 0 is white
-                rend.material.SetColor("_Color", Color.white);
-                rend.material.shader = Shader.Find("Specular");
-                rend.material.SetColor("_SpecColor", Color.white);
-                break;
-            case 1:
-                rend.material.shader = Shader.Find("_Color");               // 1 is blue
-                rend.material.SetColor("_Color", Color.blue);
-                rend.material.shader = Shader.Find("Specular");
-                rend.material.SetColor("_SpecColor", Color.blue);
-                break;
-            case 2:                                                         // 2 is green
-                rend.material.shader = Shader.Find("_Color");
-                rend.material.SetColor("_Color", Color.green);
-                rend.material.shader = Shader.Find("Specular");
-                rend.material.SetColor("_SpecColor", Color.green);
-                break;
-            case 3:
-                rend.material.shader = Shader.Find("_Color");               // 3 is red
-                rend.material.SetColor("_Color", Color.red);
-                rend.material.shader = Shader.Find("Specular");
-                rend.material.SetColor("_SpecColor", Color.red);
-                break;
-            case 4:
-                rend.material.shader = Shader.Find("_Color");               // 4 is purple
-                rend.material.SetColor("_Color", Color.HSVToRGB(267, 74f, 59f)); 
-                rend.material.shader = Shader.Find("Specular");
-                rend.material.SetColor("_SpecColor", Color.HSVToRGB(267, 74f, 59f));
-                break;
-            case 5:
-                rend.material.shader = Shader.Find("_Color");               // 5 is maroon
-                rend.material.SetColor("_Color", Color.HSVToRGB(338f, 100f, 27f)); 
-                rend.material.shader = Shader.Find("Specular");
-                rend.material.SetColor("_SpecColor", Color.HSVToRGB(338f, 100f, 27f));
-                break;
-            case 6:
-                rend.material.shader = Shader.Find("_Color");               // 6 is turquoise 
-                rend.material.SetColor("_Color", Color.cyan);
-                rend.material.shader = Shader.Find("Specular");
-                rend.material.SetColor("_SpecColor", Color.cyan);
-                break;
-            case 7:
-                rend.material.shader = Shader.Find("_Color");               // 7 is black 
-                rend.material.SetColor("_Color", Color.black);
-                rend.material.shader = Shader.Find("Specular");
-                rend.material.SetColor("_SpecColor", Color.black);
-                break;
-            case 8:                                                         // 8 is grey
-                rend.material.shader = Shader.Find("_Color");
-                rend.material.SetColor("_Color", Color.grey);
-                rend.material.shader = Shader.Find("Specular");
-                rend.material.SetColor("_SpecColor", Color.grey);
-                break;
-            case 9: //end game                                              //mines are dark read but look black 
-                rend.material.shader = Shader.Find("_Color");
-                rend.material.SetColor("_Color", Color.HSVToRGB(10f, 100f, 54f));   
-                rend.material.shader = Shader.Find("Specular");
-                rend.material.SetColor("_SpecColor", Color.HSVToRGB(10f, 100f, 54f));
-                break;
-            case 10:
-                //do nothing
-                break;
-            case 11: //start game                                           // start block is yellow
-                rend.material.shader = Shader.Find("_Color");
-                rend.material.SetColor("_Color", Color.yellow); 
-                rend.material.shader = Shader.Find("Specular");
-                rend.material.SetColor("_SpecColor", Color.yellow);
-                break;
+        Color[] colors = new Color[11];
+        colors[0] = Color.white;
+        colors[1] = Color.blue;
+        colors[2] = Color.green;
+        colors[3] = Color.red;
+        colors[4] = Color.HSVToRGB(267, 74f, 59f);      //purple
+        colors[5] = Color.HSVToRGB(338f, 100f, 27f); //maroon
+        colors[6] = Color.cyan;
+        colors[7] = Color.black;
+        colors[8] = Color.grey;
+        colors[9] = Color.HSVToRGB(10f, 100f, 54f); //dark red
+        colors[10] = Color.yellow;
 
+        if ((rend != null) && (num <= 10))
+        {
+            rend.material.shader = Shader.Find("_Color");
+            rend.material.SetColor("_Color", colors[num]);
+            rend.material.shader = Shader.Find("Specular");
+            rend.material.SetColor("_SpecColor", colors[num]);
         }
     }
 }
 
+ 
 ```
 
 _These scripts are written by Anisha Braganza but are free to be used by anyone :)_
