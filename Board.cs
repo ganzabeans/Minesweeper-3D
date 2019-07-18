@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -35,7 +35,7 @@ public class Board : MonoBehaviour
 
     //********* METHODS ***********
 
-    private void Awkae()
+    private void Awake()
     {
         boardController = boardControllerObject.GetComponent<BoardController>(); //reference board controller
     }
@@ -116,14 +116,14 @@ public class Board : MonoBehaviour
     public int CheckNum(int a, int b)
     {
         if (board[a, b].isClicked)                  //check if square hasn't been stepped on already
-            return 10;
+            return 11;
         else                                        //if the square is not run over
         {
             board[a, b].isClicked = true;           //set clicked to true
             clickCounter++;
 
             if (clickCounter == 71 && !Cell.endgame)//win game
-                return 11;
+                return 10;
 
             if (board[a, b].hasMine == true)        //check if there is a mine
                 return 9;                           //sad :'(
@@ -140,7 +140,7 @@ public class Board : MonoBehaviour
     //***** CHECK IF NEIGHBOR SQUARES ARE NOT MINES ********
     // compares surrounding array to make sure other squares are still in bounds
     // this method is called by a null square to open up surrounding squres that are
-    //touching it
+    //touching it (search method)
     public int NullAround(int a, int b)
     {
         aMin = a - 1;
@@ -149,7 +149,7 @@ public class Board : MonoBehaviour
         bPlus = b + 1;
 
         if (board[a, b].hasMine)        //if starting square has a mine, don't open it!
-            return 10;
+            return 11;
 
         if (a < bounds)
         {
@@ -216,7 +216,7 @@ public class Board : MonoBehaviour
             }
         }
 
-        return 10;
+        return 11;
     }
 
 
@@ -225,7 +225,8 @@ public class Board : MonoBehaviour
     //Set Flag Method
     public Vector3 SetFlag(int a, int b, Vector3 vector3)
     {
-        int x, z;
+        int x, z;       //direction of look vector
+        int p, q;       //new cell to look at
         aMin = a - 1;
         aPlus = a + 1;
         bMin = b - 1;
@@ -234,83 +235,23 @@ public class Board : MonoBehaviour
         x = Mathf.RoundToInt(vector3.x);
         z = Mathf.RoundToInt(vector3.z);
 
-        //assign flags based on vector
+        p = x + a;
+        q = z + b;
 
-        //following if statements check the bounds to see if still in array 
-        if (x == 1 && a < bounds)
+        if (p > 0 && p < bounds && q > 0 && q < bounds)
         {
-            if (z == 0)
-            {
-                board[aPlus, b].isFlagged = !board[aPlus, b].isFlagged;
-                if (board[aPlus, b].isFlagged)
-                    return (new Vector3(aPlus * 2 +1, 2, b * 2 - 1));
-                else
-                    return Vector3.zero;
-            }
-            if (z == 1 && b < bounds)
-            {
-                board[aPlus, bPlus].isFlagged = !board[aPlus, bPlus].isFlagged;
-                if(board[aPlus,bPlus].isFlagged)
-                    return (new Vector3(aPlus * 2 + 1, 2, bPlus * 2 - 1));
-                else
-                    return Vector3.zero;
-            }
-            if (z == -1 && b > 0)
-            {
-                board[aPlus, bMin].isFlagged = !board[aPlus, bMin].isFlagged;
-                if (board[aPlus, bMin].isFlagged)
-                    return (new Vector3(aPlus * 2 + 1, 2, bMin * 2 - 1));
-                else
-                    return Vector3.zero;
-            }
-        }
-        else if (x == -1 && a > 0)
-        {
-            if (z == 0)
-            {
-                board[aMin, b].isFlagged = !board[aMin, b].isFlagged;
-                if (board[aMin, b].isFlagged)
-                    return (new Vector3(aMin * 2 + 1, 2, b * 2 - 1));
-                else
-                    return Vector3.zero;
-            }
-            if (z == 1 && b < bounds)
-            {
-                board[aMin, bPlus].isFlagged = !board[aMin, bPlus].isFlagged;
-                if (board[aMin, bPlus].isFlagged)
-                    return (new Vector3(aMin * 2 + 1, 2, bMin * 2 - 1));
-                else
-                    return Vector3.zero;
-            }
-            if (z == -1 && b > 0)
-            {
-                board[aMin, bMin].isFlagged = !board[aMin, bMin].isFlagged;
-                if (board[aMin, bMin].isFlagged)
-                    return (new Vector3(aMin * 2 + 1, 2, bMin * 2 - 1));
-                else
-                    return Vector3.zero;
-            }
-        }
-        else if (x == 0 && z == -1 && b > 0)
-        {
-            board[a, bMin].isFlagged = !board[a, bMin].isFlagged;
-            if (board[a, bMin].isFlagged)
-                return (new Vector3(a * 2 + 1, 2, bMin * 2 - 1));
+            board[p, q].isFlagged = !board[p, q].isFlagged;
+            if (board[p, q].isFlagged)
+                return (new Vector3(p * 2 + 1, 2, q * 2 - 1));
             else
                 return Vector3.zero;
         }
-        else if (x == 0 && z == 1 && b < bounds)
-        {
-            board[a, bPlus].isFlagged = !board[a, bPlus].isFlagged;
-            if (board[a, bPlus].isFlagged)
-                return (new Vector3(a * 2 + 1, 2, bPlus * 2 - 1));
-            else
-                return Vector3.zero;
-        }
+
         return Vector3.zero;
+
     }
 
-
+ 
     //Check if flagged
     public bool SeeIfFlagged(int a, int b)
     {
