@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using Gamekit3D;
 using UnityEngine;
@@ -61,7 +61,7 @@ public class BoardController : MonoBehaviour
            Cell.endgame = true;
            flag.EndGame();
         }
-        if (x == 11)                        // x == 11 calls a win to the game
+        if (x == 10)                        // x == 10 calls a win to the game
         {
             Cell.wingame = true;
             flag.EndGame();
