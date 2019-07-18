@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -57,7 +57,7 @@ public class Cell : MonoBehaviour
         if (!endgame && !wingame && !flagged && boardController.IsBoardSet() && !steppedOn && firstClick)
         {
             colorNum = boardController.CheckAround(a, b);
-            if (colorNum != 10)
+            if (colorNum != 11)
             {
                 steppedOn = true;
                 colorBox.SetColor(colorNum);
@@ -100,7 +100,7 @@ public class Cell : MonoBehaviour
                     firstClick = true;
                     steppedOn = true;
                     boardController.Click(a, b);
-                    colorBox.SetColor(11);
+                    colorBox.SetColor(10);
                 }
         }
     }
