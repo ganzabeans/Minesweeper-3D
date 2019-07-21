@@ -10,151 +10,15 @@ Rather than a clickable 2D surface such as in the original Minesweeper, this 3D 
 
 Here are the Scripts that were added:
 
-- Board Controller
 - Board
 - Cell
 - Flag
 - Box Render
 
 
-### Board Controller
-
-The `BoardController` is the Control between the visuals and the board calculations of the game. It manages the `Board` (the non-visual map of the game), the `Cell`s (bisual cells that player interacts with), the `Flag`s (graphic dots), as well as the Player itself. After creating this, however, I'm not sure if this is the most efficient practice for Unity architecture...
-
-```markdown
-using System.Collections;
-using System.Collections.Generic;
-using Gamekit3D;
-using UnityEngine;
-
-public class BoardController : MonoBehaviour
-{
-
-    //GAME OBJECTS
-    public GameObject boardObject;
-    public GameObject cellObject;
-    private GameObject player;
-    public GameObject flagPrefab;
-    
-    //SCRIPTS
-    private Cell cellScript;
-    private Board board;
-    private Flag flag;
-    Vector3 flagPositionVector;
-
-    //PUBLIC STATIC VARS
-    public static int boardSet; //Confirm board is set before Cell Update calls
-
-  
-    //**** MONOBEHAVIOR FUNCTION *****
-
-    void Awake()
-    {
-        //Reference Scripts
-        board = boardObject.GetComponent<Board>();
-        player = GameObject.Find("Ellen");
-        flag = flagPrefab.GetComponent<Flag>();
-    }
-
-
-    // ***** Click *****
-    // THIS METHOD ACTIVATES THE BOARD 
-    // First square landed on will not be a mine
-
-    public void Click(int x, int z)
-    {
-        cellScript = cellObject.GetComponent<Cell>();       //File crashed then got a bit buggy so had to 
-        board = boardObject.GetComponent<Board>();          //reference again... :( 
-        flag = flagPrefab.GetComponent<Flag>();
-
-        boardSet += board.CreateMineFields(x, z);           //Creates the random field based on first square activated
-        boardSet += board.AssignNum();                      //Counts the number of mines squares are next to 
-    }
-
-
-    // ***** Find Color *****
-    // CHECK WHAT IS STORED IN EACH CUBE 
-    // returns the color of the cube
-
-    public int FindColor(int a, int b)
-    {
-        int x = board.CheckNum(a, b);
-                     
-        if (x == 9)                         // x == 9 calls a loss to the game
-        {
-           Cell.endgame = true;
-           flag.EndGame();
-        }
-        if (x == 10)                        // x == 10 calls a win to the game
-        {
-            Cell.wingame = true;
-            flag.EndGame();
-        }
-        return x;
-    }
-
-
-    //******* Check Around ********
-    // CHECKS WHICH SQUARES TO OPEN 
-    // Asks board to check around the square to see there are active blank squares
-    // if so and square does not have a mine, it will turn on
-
-    public int CheckAround(int a, int b)
-    {
-        return (board.NullAround(a, b));
-    }
-
-
-    //****** Is Board Set? *******
-    //MAKES SURE BOARD IS SET BEFORE OPENIGN WHITE SQUARES
-    //stops cell update functions if board hasn't been set
-
-    public bool IsBoardSet()
-    {
-        if (boardSet == 2)      //2 represents the two method calls to set the board
-        {
-            return true;
-        }
-        else
-            return false;
-    }
-
-
-    //********** FLAG METHODS ************
-    // These methods deal with flagging the cells
-
-    //creates a flag
-    public void MakeFlag(int a, int b)
-    {
-        player = GameObject.Find("Ellen");                                                          //after file crashed, had to reference again :( 
-        flagPositionVector = board.SetFlag(a, b, player.transform.rotation * Vector3.forward);      //determines direction player is facing and
-                                                                                                    //if there is an eligible place to flag
-        if (flagPositionVector != Vector3.zero)
-            Instantiate(flagPrefab, (flagPositionVector), Quaternion.identity);
-    }
-
-    //checks to see if the cell is flagged from the board
-    public bool IsFlagged(int a, int b)
-    {
-        return (board.SeeIfFlagged(a, b));
-    }
-
-    //asks the Cell to see if there is an update to being flagged or not
-    public void CheckFlagToCell()
-    {
-        cellScript.CheckFlag();
-    }
-}
-
-
-```
-
 ### Board
 
-The `Board` runs the calculations and holds a non-graphical map of the game. It uses an array of structs to hold information about each cell. The `BoardController` notifies the board on where the player is in the graphical world. 
-
 ```markdown
-
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -167,15 +31,17 @@ public class Board : MonoBehaviour
     int arraySize = 9;                      //gameboard size
     int bounds = 8;                         // boundary for array
     int[,] mineArray = new int[10, 2];      //array to store set mines
-    int aMin, aPlus, bMin, bPlus;           //For boundary calculation
-    static int clickCounter;                //to count how many squares have been clicked
+    static int clickCounter = 1;                //to count how many squares have been clicked
+    static bool boardSet;                   //check that board has been set up properly
+    static bool firstClick;                 //initializes board
+    static bool win;                        //if you win you get it!
 
-    //BOARD CONTROLLER
-    public GameObject boardControllerObject;
-    private BoardController boardController;
+    public GameObject boxObject;            //cell
+    public GameObject flagPrefab;
+    GameObject player;
+
 
     //FOR THE BOARD MAP 
-    //Struct holds info about each cell
     struct CellInfo
     {
         public bool hasMine,
@@ -184,9 +50,11 @@ public class Board : MonoBehaviour
 
         public int nextToMine;
     }
-    //MAP IS AN ARRAY OF CELLINFO
-    //9x9 board of cells
+  
+    //9x9 Map of cells
     CellInfo[,] board = new CellInfo[9, 9];
+    //9x9 Mesh Baord of cells
+    public static GameObject[,] boardMesh = new GameObject[9, 9];
 
 
 
@@ -194,14 +62,156 @@ public class Board : MonoBehaviour
 
     private void Awake()
     {
-        boardController = boardControllerObject.GetComponent<BoardController>(); //reference board controller
+        //Instantiate visible board
+        for (int i = 0; i < 9; i++)
+        {
+            for (int k = 0; k < 9; k++)
+                boardMesh[i, k] = Instantiate(boxObject, new Vector3(i * 2f, 0f, k * 2f), Quaternion.identity);
+        }
     }
+
+
+    //**** Cell Triggered ***********
+    //This method is called when the cell is triggered
+    public void CellTriggered(int x, int z)
+    {
+        Debug.Log(clickCounter);
+
+        if (board[x, z].isClicked)                      // if cell is already clicked, do nothing
+            return;
+
+        if (!board[x, z].isFlagged)                     // if cell is flagged, do nothing
+        {   
+            if (boardSet)
+            {
+                if (board[x, z].hasMine == true)        // if there is a mine, end game
+                {
+                    for (int i = 0; i < 9; i++)
+                    {
+                        for (int k = 0; k < 9; k++)
+                            boardMesh[i, k].SendMessage("EndGame");
+                    }
+                    return;
+                }
+
+
+                if (board[x, z].nextToMine != 0)       // if cell is next to a mine, activate 
+                {
+                    boardMesh[x, z].SendMessage("ChangeColor", board[x, z].nextToMine);
+                    board[x, z].isClicked = true;          
+                    clickCounter++;
+
+                    if (clickCounter >= 71)                 // if all cells with no mines are explored, win game
+                    {
+                        Win();
+                        return;
+                    }
+
+                    return;
+                }
+
+                if (board[x, z].nextToMine == 0)       // if cell is not next to a mine, open surrounding cells
+                {
+                    FloodFill(x, z);
+                    return;
+                }
+            }
+            if (!firstClick)                            // if the board is not set yet, set the board
+            {
+                firstClick = true;
+                CreateMineFields(x, z);
+                boardMesh[x, z].SendMessage("ChangeColor", board[x, z].nextToMine);
+                board[x, z].isClicked = true;
+                return;
+            }
+        }
+    }
+
+
+    //***** FLOOD FILL ********
+    // compares surrounding array to make sure other squares are still in bounds
+    // this method is called by a null square to open up surrounding squres that are
+    //touching it (DFS)
+    public void FloodFill(int x, int z)
+    {
+        if (board[x, z].isClicked)
+        {
+            return;
+        }
+        if (board[x, z].hasMine)    //shouldn't be true but had some random glitches
+        {
+            return;
+        }
+        if (!board[x,z].isFlagged)
+        { 
+            if (board[x, z].nextToMine > 0)
+            {
+                boardMesh[x, z].SendMessage("ChangeColor", board[x, z].nextToMine);
+                board[x, z].isClicked = true;
+                clickCounter++;
+
+                if (clickCounter >= 71)                 // if all cells with no mines are explored, win game
+                {
+                    Win();
+                    return;
+                }
+
+                return;
+            }
+
+            if (board[x, z].nextToMine == 0)
+            {
+                boardMesh[x, z].SendMessage("ChangeColor", board[x, z].nextToMine);
+                board[x, z].isClicked = true;
+                clickCounter++;
+
+                if (clickCounter >= 71)                 // if all cells with no mines are explored, win game
+                {
+                    Win();
+                    return;
+                }
+
+                if (x < bounds)
+                    FloodFill(x + 1, z);
+                if (x < bounds && z < bounds)
+                    FloodFill(x + 1, z + 1);
+                if (x < bounds && z > 0)
+                    FloodFill(x + 1, z - 1);
+                if (x > 0)
+                    FloodFill(x - 1, z);
+                if (x > 0 && z < bounds)
+                    FloodFill(x - 1, z + 1);
+                if (x > 0 && z > 0)
+                    FloodFill(x - 1, z - 1);
+                if (z < bounds)
+                    FloodFill(x, z + 1);
+                if (z > 0)
+                    FloodFill(x, z - 1);
+            }
+        }
+    }
+
+
+    private void Win ()
+    {
+        if (clickCounter >= 71)                 // if all cells with no mines are explored, win game
+        { 
+            win = true;
+            for (int i = 0; i < 9; i++)
+            {
+                for (int k = 0; k < 9; k++)
+                    boardMesh[i, k].SendMessage("EndGame");
+            }
+        }
+    }
+
+    // ************ BOARD CREATION *****************
 
     // ***** CREATE MIND FIELD ********
     // builds the board, places mines randomly 
     // does not place mine on initial landing point
 
-    public int CreateMineFields(int x, int z)
+    public void CreateMineFields(int x, int z)
     {
         for (int i = 0; i < mines; i++)
         {
@@ -221,14 +231,10 @@ public class Board : MonoBehaviour
                 i--;        //in case there is a repeat it the randomizaiton 
         }
 
-        board[x, z].isClicked = true;   //makes first square clicked
-        clickCounter++;
-
-        return 1;
-
+        AssignNum();
     }
 
-    //***** ASSIGN MINE COUNT NUM TO NEIGHBORS ********
+    //***** ASSIGN MINE COUNT*******
     //counts number of mines each square is next to
     public int AssignNum()
     {
@@ -265,171 +271,64 @@ public class Board : MonoBehaviour
                 board[a, b + 1].nextToMine++;
         }
 
+        boardSet = true;
+
         return 1;
     }
 
-    //**** CHECKS VAR STORED ***********
-    //This method sees what is stored in the cell the player is on
-    public int CheckNum(int a, int b)
+
+    // ****** GET COLOR ***********
+    // when the game ends, the board shows results if lost, all white if won
+    public int GetColor(int x, int z)
     {
-        if (board[a, b].isClicked)                  //check if square hasn't been stepped on already
-            return 11;
-        else                                        //if the square is not run over
-        {
-            board[a, b].isClicked = true;           //set clicked to true
-            clickCounter++;
+        board[x, z].isClicked = true;
 
-            if (clickCounter == 71 && !Cell.endgame)//win game
-                return 10;
+        if (win)
+            return 0;
 
-            if (board[a, b].hasMine == true)        //check if there is a mine
-                return 9;                           //sad :'(
+        if (board[x, z].hasMine)
+            return 9;
+        else
+            return board[x, z].nextToMine;
 
-            else if (board[a, b].nextToMine != 0)   //check if it is next to a mine
-                return board[a, b].nextToMine;
-                                            
-            else                                    //default 
-                return 0;
-        }
     }
-
-
-    //***** CHECK IF NEIGHBOR SQUARES ARE NOT MINES ********
-    // compares surrounding array to make sure other squares are still in bounds
-    // this method is called by a null square to open up surrounding squres that are
-    //touching it (search method)
-    public int NullAround(int a, int b)
-    {
-        aMin = a - 1;
-        aPlus = a + 1;
-        bMin = b - 1;
-        bPlus = b + 1;
-
-        if (board[a, b].hasMine)        //if starting square has a mine, don't open it!
-            return 11;
-
-        if (a < bounds)
-        {
-            if (board[aPlus, b].isClicked && board[aPlus, b].nextToMine == 0 && !board[aPlus, b].hasMine)
-            {
-                board[a, b].isClicked = true;
-                clickCounter++;
-                return board[a,b].nextToMine;
-            }
-            if (b < bounds)
-                if (board[aPlus, bPlus].isClicked && board[aPlus, bPlus].nextToMine == 0 && !board[aPlus, bPlus].hasMine)
-                {
-                    board[a, b].isClicked = true;
-                    clickCounter++;
-                    return board[a, b].nextToMine;
-                }
-            if (b > 0)
-                if (board[aPlus, bMin].isClicked && board[aPlus, bMin].nextToMine == 0 && !board[aPlus, bMin].hasMine)
-                {
-                    board[a, b].isClicked = true;
-                    clickCounter++;
-                    return board[a, b].nextToMine;
-                }
-        }
-        if (a > 0)
-        {
-            if (board[aMin, b].isClicked && board[aMin, b].nextToMine == 0 && !board[aMin, b].hasMine)
-            {
-                board[a, b].isClicked = true;
-                clickCounter++;
-                return board[a, b].nextToMine;
-            }
-            if (b < bounds)
-                if (board[aMin, bPlus].isClicked && board[aMin, bPlus].nextToMine == 0 && !board[aMin, bPlus].hasMine)
-                {
-                    board[a, b].isClicked = true;
-                    clickCounter++;
-                    return board[a, b].nextToMine;
-                }
-            if (b > 0)
-                if (board[aMin, bMin].isClicked && board[aMin, bMin].nextToMine == 0 && !board[aMin, bMin].hasMine)
-                {
-                    board[a, b].isClicked = true;
-                    clickCounter++;
-                    return board[a, b].nextToMine;
-                }
-        }
-        if (b > 0)
-        {
-            if (board[a, bMin].isClicked && board[a, bMin].nextToMine == 0 && !board[a, bMin].hasMine)
-            {
-                board[a, b].isClicked = true;
-                clickCounter++;
-                return board[a, b].nextToMine;
-            }
-        }
-        if (b < bounds)
-        {
-            if (board[a, bPlus].isClicked && board[a, bPlus].nextToMine == 0 && !board[a, bPlus].hasMine)
-            {
-                board[a, b].isClicked = true;
-                clickCounter++;
-                return board[a, b].nextToMine;
-            }
-        }
-
-        return 11;
-    }
-
-
     //****** FLAG FUNCTIONS *********
 
-    //Set Flag Method
-    public Vector3 SetFlag(int a, int b, Vector3 vector3)
+    //When user presses "F", a flag is created
+    public void SetFlag(int x, int z)
     {
-        int x, z;       //direction of look vector
-        int p, q;       //new cell to look at
-        aMin = a - 1;
-        aPlus = a + 1;
-        bMin = b - 1;
-        bPlus = b + 1;
+        player = GameObject.Find("Ellen");
+        Vector3 vector3 = player.transform.rotation * Vector3.forward;      //determines direction player is facing and
+                                                                                             //if there is an eligible place to flag
 
-        x = Mathf.RoundToInt(vector3.x);
-        z = Mathf.RoundToInt(vector3.z);
+        int a, b;       //direction of look vector
 
-        p = x + a;
-        q = z + b;
+        a = Mathf.RoundToInt(vector3.x) + x;        //coordinate of new flag
+        b = Mathf.RoundToInt(vector3.z) + z;
 
-        if (p > 0 && p < bounds && q > 0 && q < bounds)
+        if ((a >= 0) && (a < arraySize) && (b >= 0) && (b < arraySize))
         {
-            board[p, q].isFlagged = !board[p, q].isFlagged;
-            if (board[p, q].isFlagged)
-                return (new Vector3(p * 2 + 1, 2, q * 2 - 1));
-            else
-                return Vector3.zero;
+            board[a, b].isFlagged = !board[a, b].isFlagged;
+            if (board[a, b].isFlagged)
+            {
+                Instantiate(flagPrefab, new Vector3(a * 2 + 1, 2, b * 2 - 1), Quaternion.identity);
+            }
         }
-
-        return Vector3.zero;
-
     }
 
- 
-    //Check if flagged
-    public bool SeeIfFlagged(int a, int b)
+    //When Flag is deleted by player, Board unflags cell
+    public void RemoveFlag(int x, int z)
     {
-        return board[a, b].isFlagged;
+        board[x, z].isFlagged = false;
     }
 
-    // removes flags when deleted
-    public void RemoveFlag(int a, int b)
-    {
-        board[a, b+1].isFlagged = false;
-        boardController.CheckFlagToCell();  //asks cell to see if its flag is deleted 
-    }
-   
 }
-
 
 ```
 
 ### Cell
 
-The `Cell` works with the mesh boxes that the player interacts with. It is triggered when the player lands on top of it; the cell then notifies the `BoardController` which returns information to the cell about what color to render to (if any).
+The `Cell` notifies the `Board` when the player lands in its trigger. It also recieves instructions from the `Board` of which color to switch to. 
 
 ```markdown
 using System.Collections;
@@ -442,75 +341,33 @@ public class Cell : MonoBehaviour
 
     //GAME OBJECTS
     GameObject player;
-    GameObject boardControllerObject;
+    public GameObject boardObject;
     public GameObject cube;
-    public GameObject flag;
     public GameObject boxRender;
 
     //SCRIPTS
-    static private BoardController boardController;
+    static private Board board;
     private BoxRender colorBox;
-
-    //PUBLIC STATICS
-    public static bool firstClick;      //when first click happens is ture
-    public static bool endgame, wingame;
 
    //BOOLS
     public bool inTrigger;
-    bool steppedOn;
-    public bool flagged;
 
     //INTEGERS
-    int colorNum;
-    int a, b; //coordinate location
+    int x, z; //coordinate location
 
 
     //******** METHODS *******************
 
-    // MONOBEHAVIOR METHODS 
-
-    //***** START **********
-    //Find elen object to detect in trigger, set array 
-
-    void Start ()                       
+    void Awake ()                       
     { 
         player = GameObject.Find("Ellen");
-		boardControllerObject = GameObject.Find("BoardController");
+		
+        x = ((int)cube.transform.position.x / 2);               //position in array
+        z = ((int)cube.transform.position.z / 2);               //position in array
 
-        a = ((int)cube.transform.position.x / 2);               //position in array
-        b = ((int)cube.transform.position.z / 2);               //position in array
-
-        colorBox = boxRender.GetComponent<BoxRender>();                                     //reference class for rendering
-        boardController = boardControllerObject.GetComponent<BoardController>();            //reference boardController
+        colorBox = boxRender.GetComponent<BoxRender>();         //reference of Box Render and Board
+        board = boardObject.GetComponent<Board>();
     }
-
-    void Update()
-    {
-        //checks if other cubes around are white
-        //if true, then they need to be turned on if they dont' have a mine in them
-        if (!endgame && !wingame && !flagged && boardController.IsBoardSet() && !steppedOn && firstClick)
-        {
-            colorNum = boardController.CheckAround(a, b);
-            if (colorNum != 11)
-            {
-                steppedOn = true;
-                colorBox.SetColor(colorNum);
-            }
-        }
-        //sends coordinates to make a flag
-        if (inTrigger && !endgame && !wingame && (boardController.IsBoardSet() && firstClick))
-        {
-            if (Input.GetKeyDown(KeyCode.F))
-                boardController.MakeFlag(a, b);
-        }
-        //if player steps on a mine, show color
-        if (endgame)
-            colorBox.SetColor((boardController.FindColor(a, b)));
-        //if player wins, set the board to white
-		if (wingame)
-			colorBox.SetColor(0);
-    }
-
 
     //******** TRIGGER METHODS ********
 
@@ -520,22 +377,7 @@ public class Cell : MonoBehaviour
         if (other.transform == player.transform)
         {
             inTrigger = true;
-
-            if (firstClick)
-               flagged = boardController.IsFlagged(a, b);
-
-                if (!steppedOn && firstClick && !endgame && !flagged &&!wingame)
-                {
-                    steppedOn = true;
-                    colorBox.SetColor((boardController.FindColor(a, b)));           //if triggered, set color
-                }
-                else if (!firstClick)                                               //this initializes the board
-                {
-                    firstClick = true;
-                    steppedOn = true;
-                    boardController.Click(a, b);
-                    colorBox.SetColor(10);
-                }
+            board.CellTriggered(x, z);
         }
     }
 
@@ -548,33 +390,34 @@ public class Cell : MonoBehaviour
         }
     }
 
-
-    //********FLAG METHODS************
-
-    //checks if there are changes made to its flag
-    public void CheckFlag()
-    {
-        flagged = boardController.IsFlagged(a, b); 
+    // when board tells cell to change color, cell lets box render know which color to change to
+    public void ChangeColor (int colorCode)
+    { 
+        colorBox.SetColor(colorCode);
     }
 
-    // if flag is removed, set flagged to false
-    public void RemoveFlag(int x, int y)
+    // when game ends, turn on color
+    public void EndGame ()
     {
-        if (a == x && b == y)
+        colorBox.SetColor(board.GetColor(x, z));
+    }
+
+    //checking if player wants to flag a square
+    private void Update()
+    {
+        if (inTrigger)
         {
-            flagged = false;
+            if (Input.GetKeyDown(KeyCode.F))
+                board.SetFlag(x, z);
         }
     }
-
-
 }   
-
 
 ```
 
 ### Flag
 
-The `Flag`controls the mesh flag spheres that the player and mesh board interacts with. When triggered by the player, it checks for a mouse click to see if the player wants to delete it. 
+The `Flag` manages the mesh flags created by the player. If the player removes a flag, it deletes the game object and notifies the `Board`.
 
 ```markdown
 using System.Collections;
@@ -640,21 +483,18 @@ public class Flag : MonoBehaviour
         {
             if (m_inTrigger == true)
             {
-				Destroy(gameObject);
-				cell.RemoveFlag((int)(this.transform.position.x / 2), (int)(this.transform.position.z / 2)); 
-                board.RemoveFlag((int)(this.transform.position.x/2), (int)(this.transform.position.z/2));       
+                board.RemoveFlag((int)(this.transform.position.x - 1)/2,(int)(this.transform.position.z + 1)/2);
+                Destroy(gameObject);
             }
         }
                        
-        if (!m_foundStaff && Input.GetMouseButtonDown(0))       //staff is only enabled when clicked, old verison of unity couldn't find 
+        if (!m_foundStaff && Input.GetMouseButtonDown(0))       //staff is only enabled when clicked, old verison of unity couldn't find it on the prefab for somereason... 
         {                                                       //the assets so I just went with a tag when its available 
             staff = GameObject.FindGameObjectWithTag("Staff");
             if (staff)
                 m_foundStaff = true;
         }
     }
-
-
 }
 
 ```
@@ -710,7 +550,6 @@ public class BoxRender : MonoBehaviour
         }
     }
 }
-
  
 ```
 
