@@ -511,6 +511,8 @@ public class BoxRender : MonoBehaviour
 {
     Renderer rend;
 
+    Color[] colors = new Color[11];
+
     //gameobject position
     void Awake()
     {
@@ -521,12 +523,7 @@ public class BoxRender : MonoBehaviour
 
         rend.material.shader = Shader.Find("Specular");
         rend.material.SetColor("_SpecColor", Color.grey);
-    }
 
-    //  This function changes the cube color
-    public void SetColor(int num)
-    {
-        Color[] colors = new Color[11];
         colors[0] = Color.white;
         colors[1] = Color.blue;
         colors[2] = Color.green;
@@ -538,7 +535,11 @@ public class BoxRender : MonoBehaviour
         colors[8] = Color.grey;
         colors[9] = Color.HSVToRGB(10f, 100f, 54f); //dark red
         colors[10] = Color.yellow;
+    }
 
+    //  This function changes the cube color
+    public void SetColor(int num)
+    {
         if ((rend != null) && (num <= 10))
         {
             rend.material.shader = Shader.Find("_Color");
@@ -548,6 +549,7 @@ public class BoxRender : MonoBehaviour
         }
     }
 }
+
  
 ```
 
