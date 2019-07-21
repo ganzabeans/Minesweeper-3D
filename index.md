@@ -75,8 +75,6 @@ public class Board : MonoBehaviour
     //This method is called when the cell is triggered
     public void CellTriggered(int x, int z)
     {
-        Debug.Log(clickCounter);
-
         if (board[x, z].isClicked)                      // if cell is already clicked, do nothing
             return;
 
